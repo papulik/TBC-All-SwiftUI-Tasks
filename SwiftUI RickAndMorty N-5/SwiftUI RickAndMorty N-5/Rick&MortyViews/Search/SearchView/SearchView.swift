@@ -14,7 +14,7 @@ struct SearchView: View {
     @State private var refreshId = UUID()
 
     var body: some View {
-        NavigationStack(path: $viewModel.navigationPath) {
+        NavigationView {
             ZStack {
                 backgroundView
                 
@@ -30,16 +30,6 @@ struct SearchView: View {
                 }
                 .navigationTitle("Search")
                 .id(refreshId)
-            }
-            .navigationDestination(for: Character.self) { character in
-                CharacterDetailView(character: character)
-            }
-            .navigationDestination(for: Episode.self) { episode in
-                EpisodeDetailView(episode: episode)
-                    .environmentObject(viewModel)
-            }
-            .navigationDestination(for: Location.self) { location in
-                LocationDetailView(location: location) // Assuming you have a LocationDetailView
             }
         }
     }
@@ -59,7 +49,8 @@ struct SearchView: View {
         .pickerStyle(SegmentedPickerStyle())
         .padding()
         .onChange(of: selectedSegment) {
-            viewModel.clearResults()
+            viewModel.searchResults.removeAll()
+            viewModel.episodeResults.removeAll()
             searchText = ""
             refreshId = UUID()
         }
@@ -88,21 +79,17 @@ struct SearchView: View {
                 switch selectedSegment {
                 case 0:
                     ForEach(viewModel.searchResults) { character in
-                        NavigationLink(value: character) {
+                        NavigationLink(destination: CharacterDetailView(character: character)) {
                             characterRow(for: character)
                         }
                     }
                 case 1:
                     ForEach(viewModel.episodeResults) { episode in
-                        NavigationLink(value: episode) {
-                            episodeRow(for: episode)
-                        }
+                        episodeRow(for: episode)
                     }
                 case 2:
                     ForEach(viewModel.locationResults) { location in
-                        NavigationLink(value: location) {
-                            locationRow(for: location)
-                        }
+                        locationRow(for: location)
                     }
                 default:
                     EmptyView()
