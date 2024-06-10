@@ -24,9 +24,38 @@ final class MoviesCollectionViewModel: ObservableObject {
         networkingService.fetchData(from: url) { (result: Result<MovieResponse, Error>) in
             switch result {
             case .success(let movieResponse):
-                self.movies = movieResponse.results
+                var movies = movieResponse.results
+                let group = DispatchGroup()
+
+                for i in 0..<movies.count {
+                    group.enter()
+                    self.fetchMovieDetails(for: movies[i].id) { duration in
+                        movies[i].duration = duration
+                        group.leave()
+                    }
+                }
+
+                group.notify(queue: .main) {
+                    self.movies = movies
+                }
+
             case .failure(let error):
-                print("Failed to fetch movies: \(error)")
+                print("Failed to search movies: \(error)")
+            }
+        }
+    }
+    
+    private func fetchMovieDetails(for movieId: Int, completion: @escaping (Int?) -> Void) {
+        let urlString = Constants.Endpoints.movieDetails + "\(movieId)?api_key=\(Constants.apiKey)"
+        guard let url = URL(string: urlString) else { return }
+        
+        networkingService.fetchData(from: url) { (result: Result<MovieDetailsResponse, Error>) in
+            switch result {
+            case .success(let movieDetails):
+                completion(movieDetails.runtime)
+            case .failure(let error):
+                print("Failed to fetch movie details: \(error)")
+                completion(nil)
             }
         }
     }
