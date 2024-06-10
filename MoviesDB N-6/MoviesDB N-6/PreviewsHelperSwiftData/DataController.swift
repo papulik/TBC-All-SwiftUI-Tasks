@@ -5,12 +5,11 @@
 //  Created by Zuka Papuashvili on 09.06.24.
 //
 
-import Foundation
 import SwiftData
 import SwiftUI
 
 @MainActor
-class DataController {
+final class DataController {
     static let previewContainer: ModelContainer = {
         do {
             let config = ModelConfiguration(isStoredInMemoryOnly: true)
